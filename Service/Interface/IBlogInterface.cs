@@ -13,6 +13,8 @@ namespace Service.Interface
         Task<dynamic> BlogTags(BlogTags req);
         Task<dynamic> BlogPost(BlogPost req);
         Task<dynamic> BlogPostTags(PostTag req);
+        Task<dynamic> Bus(Bus request);
+        Task<dynamic> AssignBus(AssignBus request);
 
     }
 }

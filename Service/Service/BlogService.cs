@@ -4,6 +4,7 @@ using Models;
 using Service.Interface;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -222,7 +223,110 @@ namespace Service.Service
                 };
             }
         }
-        
+        public async Task<dynamic> Bus(Bus request)
+        {
+            try
+            {
+                var procedure = "sp_manage_bus";
+                var parameters = new DynamicParameters();
+                parameters.Add("@UserID", request.UserID);
+                parameters.Add("@SchID", request.SchID);
+                parameters.Add("@Flag", request.Flag);
+                parameters.Add("@IsActive", request.IsActive);
+                parameters.Add("@BusNumber", request.BusNumber);
+                parameters.Add("@DriverName", request.DriverName);
+                parameters.Add("@DriverContact", request.DriverContact);
+                parameters.Add("@BusID", request.BusID);
+
+                var data = DbHelper.RunProc<dynamic>(procedure, parameters);
+
+                if (data.Count() != 0 && data.FirstOrDefault()?.Message == null)
+                {
+                    return new
+                    {
+                        StatusCode = 200,
+                        Message = "Success",
+                        Data = data.ToList()
+                    };
+                }
+                else if (data.Count() == 1 && data.FirstOrDefault()?.Message != null)
+                {
+                    return new
+                    {
+                        StatusCode = data.FirstOrDefault().StatusCode,
+                        Message = data.FirstOrDefault().Message
+                    };
+                }
+                else
+                {
+                    return new
+                    {
+                        StatusCode = 400,
+                        Message = "No Data"
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new
+                {
+                    StatusCode = 500,
+                    Message = ex.Message
+                };
+            }
+        }
+
+        public async Task<dynamic> AssignBus(AssignBus request)
+        {
+            try
+            {
+                var procedure = "sp_assign_bus";
+                var parameters = new DynamicParameters();
+                parameters.Add("@BusID", request.BusID);
+                parameters.Add("@AssignedID", request.AssignedID);
+                parameters.Add("@StudentID", request.StudentID);
+                parameters.Add("@UserId", request.UserID);
+                parameters.Add("@PickupLocation", request.PickupLocation);
+                parameters.Add("@DropoffLocation", request.DropoffLocation);
+                parameters.Add("@Flag", request.Flag);
+
+                var data = DbHelper.RunProc<dynamic>(procedure, parameters);
+
+                if (data.Count() != 0 && data.FirstOrDefault()?.Message == null)
+                {
+                    return new
+                    {
+                        StatusCode = 200,
+                        Message = "Success",
+                        Data = data.ToList()
+                    };
+                }
+                else if (data.Count() == 1 && data.FirstOrDefault()?.Message != null)
+                {
+                    return new
+                    {
+                        StatusCode = data.FirstOrDefault().StatusCode,
+                        Message = data.FirstOrDefault().Message
+                    };
+                }
+                else
+                {
+                    return new
+                    {
+                        StatusCode = 400,
+                        Message = "No Data"
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new
+                {
+                    StatusCode = 500,
+                    Message = ex.Message
+                };
+            }
+        }
 
     }
 }

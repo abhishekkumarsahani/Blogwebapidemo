@@ -48,6 +48,22 @@ namespace API.Controllers
         }
 
 
+        [HttpPost, Route("~/api/admin/bus")]
+        public async Task<IActionResult> CreateBus(Bus bus)
+        {
+            var data = await _unitOfWork.blogservice.Bus(bus);
+            return Ok(data);
+        }
+
+
+        [HttpPost, Route("~/api/admin/assign_bus")]
+        public async Task<IActionResult> AssignBus(AssignBus assignBus)
+        {
+            var data = await _unitOfWork.blogservice.AssignBus(assignBus);
+            return Ok(data);
+        }
+
+
 
     }
 }
