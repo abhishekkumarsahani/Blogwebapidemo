@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Helper.Dapper;
 using Models;
+using Newtonsoft.Json;
 using Service.Interface;
 using System;
 using System.Collections.Generic;
@@ -282,32 +283,40 @@ namespace Service.Service
             {
                 var procedure = "sp_assign_bus";
                 var parameters = new DynamicParameters();
+                parameters.Add("@UserID", request.UserID);
+                parameters.Add("@Flag", request.Flag);
                 parameters.Add("@BusID", request.BusID);
-                parameters.Add("@AssignedID", request.AssignedID);
-                parameters.Add("@StudentID", request.StudentID);
-                parameters.Add("@UserId", request.UserID);
                 parameters.Add("@PickupLocation", request.PickupLocation);
                 parameters.Add("@DropoffLocation", request.DropoffLocation);
-                parameters.Add("@Flag", request.Flag);
+                parameters.Add("@AssignedID", request.AssignedID);
 
+                // Convert list of student IDs to JSON format
+                var studentDetailsJson = JsonConvert.SerializeObject(request.StudentDetails); // Assuming request.StudentDetails is a list of student IDs
+                parameters.Add("@StudentDetails", studentDetailsJson); // JSON string
+
+                // Ensure your DbHelper.RunProc method handles JSON parameters correctly
                 var data = DbHelper.RunProc<dynamic>(procedure, parameters);
 
-                if (data.Count() != 0 && data.FirstOrDefault()?.Message == null)
+                if (data != null && data.Any())
                 {
-                    return new
+                    var firstRecord = data.FirstOrDefault();
+                    if (firstRecord?.Message == null)
                     {
-                        StatusCode = 200,
-                        Message = "Success",
-                        Data = data.ToList()
-                    };
-                }
-                else if (data.Count() == 1 && data.FirstOrDefault()?.Message != null)
-                {
-                    return new
+                        return new
+                        {
+                            StatusCode = 200,
+                            Message = "Success",
+                            Data = data.ToList()
+                        };
+                    }
+                    else
                     {
-                        StatusCode = data.FirstOrDefault().StatusCode,
-                        Message = data.FirstOrDefault().Message
-                    };
+                        return new
+                        {
+                            StatusCode = firstRecord.StatusCode,
+                            Message = firstRecord.Message
+                        };
+                    }
                 }
                 else
                 {
@@ -327,6 +336,7 @@ namespace Service.Service
                 };
             }
         }
+
 
     }
 }
