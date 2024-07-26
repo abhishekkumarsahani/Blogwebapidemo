@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Service.Service
 {
@@ -284,37 +285,40 @@ namespace Service.Service
                 var procedure = "sp_assign_bus";
                 var parameters = new DynamicParameters();
                 parameters.Add("@UserID", request.UserID);
+                parameters.Add("@ImeiID", request.ImeiID);
+                parameters.Add("@SchID", request.SchID);
                 parameters.Add("@Flag", request.Flag);
                 parameters.Add("@BusID", request.BusID);
                 parameters.Add("@PickupLocation", request.PickupLocation);
                 parameters.Add("@DropoffLocation", request.DropoffLocation);
-                parameters.Add("@AssignedID", request.AssignedID);
 
-                // Convert list of student IDs to JSON format
-                var studentDetailsJson = JsonConvert.SerializeObject(request.StudentDetails); // Assuming request.StudentDetails is a list of student IDs
-                parameters.Add("@StudentDetails", studentDetailsJson); // JSON string
+                // Convert Students list to XML string
+                var studentsXml = new XElement("Students",
+                    request.Students.Select(s => new XElement("Student",
+                        new XElement("StudentID", s.StudentID)))).ToString();
 
-                // Ensure your DbHelper.RunProc method handles JSON parameters correctly
-                var data = DbHelper.RunProc<dynamic>(procedure, parameters);
+                parameters.Add("@Students", studentsXml, DbType.Xml);
+
+                var data = DbHelper.RunProc<dynamic>(procedure, parameters); // Ensure this is an async call
 
                 if (data != null && data.Any())
                 {
                     var firstRecord = data.FirstOrDefault();
-                    if (firstRecord?.Message == null)
+                    if (firstRecord?.Message != null)
                     {
                         return new
                         {
-                            StatusCode = 200,
-                            Message = "Success",
-                            Data = data.ToList()
+                            StatusCode = firstRecord.StatusCode,
+                            Message = firstRecord.Message
                         };
                     }
                     else
                     {
                         return new
                         {
-                            StatusCode = firstRecord.StatusCode,
-                            Message = firstRecord.Message
+                            StatusCode = 200,
+                            Message = "Success",
+                            Data = data.ToList()
                         };
                     }
                 }
@@ -336,6 +340,8 @@ namespace Service.Service
                 };
             }
         }
+
+
 
 
     }
